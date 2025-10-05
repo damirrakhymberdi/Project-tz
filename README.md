@@ -1,6 +1,14 @@
-# 📊 Аналитический дашборд
+# 📊 Nuxt 3 Analytics Dashboard
+
+[![Nuxt 3](https://img.shields.io/badge/Nuxt-3.0-00DC82?style=flat&logo=nuxt.js&logoColor=white)](https://nuxt.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Chart.js](https://img.shields.io/badge/Chart.js-4.0-FF6384?style=flat&logo=chart.js&logoColor=white)](https://www.chartjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=flat&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 
 Интерактивный дашборд для анализа продаж и пользовательской активности, построенный на Nuxt 3 с использованием TypeScript, Chart.js и Tailwind CSS.
+
+## 🚀 Live Demo
+[Посмотреть демо](https://damirrakhymberdi.github.io/Project-tz/)
 
 ## 🚀 Возможности
 
