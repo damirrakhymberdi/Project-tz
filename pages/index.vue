@@ -30,7 +30,7 @@
 
       <!-- Loading State -->
       <div v-if="dashboardStore.isLoading" class="flex justify-center items-center py-12">
-        <div class="loading-spinner"></div>
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
         <span class="ml-3 text-gray-600 dark:text-gray-400">Загрузка данных...</span>
       </div>
 
@@ -56,19 +56,23 @@
         <!-- Charts -->
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
           <!-- Sales Chart -->
-          <div class="chart-container">
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               📈 Динамика продаж
             </h2>
-            <SalesChart />
+            <div class="h-64">
+              <SalesChart :isDark="isDark" />
+            </div>
           </div>
 
           <!-- Category Chart -->
-          <div class="chart-container">
+          <div class="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6">
             <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               🥧 Распределение по категориям
             </h2>
-            <CategoryChart />
+            <div class="h-64">
+              <CategoryChart :isDark="isDark" />
+            </div>
           </div>
         </div>
       </div>
@@ -79,7 +83,6 @@
 <script setup lang="ts">
 import { useDashboardStore } from '~/stores/dashboard'
 
-// SEO
 useHead({
   title: 'Аналитический дашборд',
   meta: [
@@ -90,14 +93,43 @@ useHead({
 const dashboardStore = useDashboardStore()
 const isDark = ref(false)
 
-// Загружаем данные при монтировании
 onMounted(async () => {
   await dashboardStore.fetchSalesData()
+  
+  // Системалық настройкадан тақырып алу
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+  
+  if (prefersDark) {
+    isDark.value = true
+    document.documentElement.classList.add('dark')
+  }
 })
 
-// Переключение темы
 const toggleTheme = () => {
   isDark.value = !isDark.value
-  document.documentElement.classList.toggle('dark', isDark.value)
+  
+  if (isDark.value) {
+    document.documentElement.classList.add('dark')
+  } else {
+    document.documentElement.classList.remove('dark')
+  }
 }
 </script>
+
+<style>
+.chart-container {
+  @apply bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6;
+}
+
+.metric-card {
+  @apply bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-gray-200 dark:border-slate-700 p-6 transition-all hover:shadow-md;
+}
+
+.filter-button {
+  @apply px-4 py-2 rounded-lg border border-gray-300 dark:border-slate-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-700 transition-colors;
+}
+
+.filter-button.active {
+  @apply bg-indigo-600 text-white border-indigo-600 hover:bg-indigo-700;
+}
+</style>

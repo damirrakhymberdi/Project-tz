@@ -12,22 +12,41 @@ const dashboardStore = useDashboardStore()
 const chartCanvas = ref<HTMLCanvasElement>()
 let chart: Chart | null = null
 
-// Регистрируем все компоненты Chart.js
+// ✅ Тақырыпты parent-тен props арқылы аламыз
+interface Props {
+  isDark?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isDark: false
+})
+
 Chart.register(...registerables)
+
+const getThemeColors = () => {
+  return {
+    text: props.isDark ? '#e2e8f0' : '#374151',
+    textSecondary: props.isDark ? '#94a3b8' : '#6b7280',
+    grid: props.isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(107, 114, 128, 0.1)',
+    tooltipBg: props.isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(0, 0, 0, 0.8)',
+    tooltipText: '#ffffff',
+    border: props.isDark ? '#475569' : '#6366f1'
+  }
+}
 
 const initChart = () => {
   if (!chartCanvas.value) return
-
+  
   const ctx = chartCanvas.value.getContext('2d')
   if (!ctx) return
-
-  // Уничтожаем предыдущий график
+  
   if (chart) {
     chart.destroy()
   }
-
+  
   const chartData = dashboardStore.chartData
-
+  const colors = getThemeColors()
+  
   chart = new Chart(ctx, {
     type: 'line',
     data: chartData,
@@ -38,16 +57,16 @@ const initChart = () => {
         legend: {
           position: 'top' as const,
           labels: {
-            color: '#6b7280',
+            color: colors.textSecondary,
             usePointStyle: true,
             padding: 20
           }
         },
         tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: '#ffffff',
-          bodyColor: '#ffffff',
-          borderColor: '#6366f1',
+          backgroundColor: colors.tooltipBg,
+          titleColor: colors.tooltipText,
+          bodyColor: colors.tooltipText,
+          borderColor: colors.border,
           borderWidth: 1,
           cornerRadius: 8,
           displayColors: true,
@@ -58,18 +77,18 @@ const initChart = () => {
       scales: {
         x: {
           grid: {
-            color: 'rgba(107, 114, 128, 0.1)'
+            color: colors.grid
           },
           ticks: {
-            color: '#6b7280'
+            color: colors.textSecondary
           }
         },
         y: {
           grid: {
-            color: 'rgba(107, 114, 128, 0.1)'
+            color: colors.grid
           },
           ticks: {
-            color: '#6b7280',
+            color: colors.textSecondary,
             callback: function(value) {
               return '₸' + value.toLocaleString()
             }
@@ -88,21 +107,25 @@ const initChart = () => {
   })
 }
 
-// Инициализируем график при монтировании
 onMounted(() => {
   nextTick(() => {
     initChart()
   })
 })
 
-// Обновляем график при изменении данных
+// ✅ Props өзгергенде жаңарту
+watch(() => props.isDark, () => {
+  nextTick(() => {
+    initChart()
+  })
+})
+
 watch(() => dashboardStore.chartData, () => {
   nextTick(() => {
     initChart()
   })
 }, { deep: true })
 
-// Очищаем график при размонтировании
 onUnmounted(() => {
   if (chart) {
     chart.destroy()

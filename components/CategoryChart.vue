@@ -12,8 +12,26 @@ const dashboardStore = useDashboardStore()
 const chartCanvas = ref<HTMLCanvasElement>()
 let chart: Chart | null = null
 
-// Регистрируем все компоненты Chart.js
+// ✅ Тақырыпты parent-тен props арқылы аламыз
+interface Props {
+  isDark?: boolean
+}
+
+const props = withDefaults(defineProps<Props>(), {
+  isDark: false
+})
+
 Chart.register(...registerables)
+
+const getThemeColors = () => {
+  return {
+    text: props.isDark ? '#e2e8f0' : '#374151',
+    textSecondary: props.isDark ? '#94a3b8' : '#6b7280',
+    tooltipBg: props.isDark ? 'rgba(30, 41, 59, 0.95)' : 'rgba(0, 0, 0, 0.8)',
+    tooltipText: '#ffffff',
+    border: props.isDark ? '#475569' : '#6366f1'
+  }
+}
 
 const getCategoryData = () => {
   const categoryTotals: Record<string, number> = {}
@@ -60,6 +78,7 @@ const initChart = () => {
   }
 
   const chartData = getCategoryData()
+  const colors = getThemeColors()
 
   chart = new Chart(ctx, {
     type: 'doughnut',
@@ -71,7 +90,7 @@ const initChart = () => {
         legend: {
           position: 'bottom' as const,
           labels: {
-            color: '#6b7280',
+            color: colors.textSecondary,
             usePointStyle: true,
             padding: 20,
             font: {
@@ -80,10 +99,10 @@ const initChart = () => {
           }
         },
         tooltip: {
-          backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: '#ffffff',
-          bodyColor: '#ffffff',
-          borderColor: '#6366f1',
+          backgroundColor: colors.tooltipBg,
+          titleColor: colors.tooltipText,
+          bodyColor: colors.tooltipText,
+          borderColor: colors.border,
           borderWidth: 1,
           cornerRadius: 8,
           displayColors: true,
@@ -109,6 +128,13 @@ const initChart = () => {
 
 // Инициализируем график при монтировании
 onMounted(() => {
+  nextTick(() => {
+    initChart()
+  })
+})
+
+// ✅ Props өзгергенде жаңарту
+watch(() => props.isDark, () => {
   nextTick(() => {
     initChart()
   })

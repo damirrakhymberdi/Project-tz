@@ -1,139 +1,139 @@
+// stores/dashboard.ts
 import { defineStore } from 'pinia'
-import type { SaleData, FilterPeriod, DashboardState, MetricCard } from '~/types'
+
+export interface SaleData {
+    date: string
+    amount: number
+    category: string
+}
+
+export interface MetricCard {
+    title: string
+    value: number
+    icon: string
+    change: number
+    changeType: 'increase' | 'decrease'
+}
+
+export interface ChartData {
+    labels: string[]
+    datasets: {
+        label: string
+        data: number[]
+        borderColor: string
+        backgroundColor: string
+        tension: number
+    }[]
+}
 
 export const useDashboardStore = defineStore('dashboard', {
-    state: (): DashboardState => ({
-        salesData: [],
-        selectedPeriod: {
-            label: 'Неделя',
-            value: 'week',
-            startDate: '2024-06-01',
-            endDate: '2024-06-07'
-        },
+    state: () => ({
+        salesData: [] as SaleData[],
         isLoading: false,
-        error: null
+        error: null as string | null,
+        selectedPeriod: { value: 'month', label: 'Месяц' }
     }),
 
     getters: {
-        // Метрики для карточек
-        metrics: (state): MetricCard[] => {
-            const total = state.salesData.reduce((sum, item) => sum + item.amount, 0)
-            const count = state.salesData.length
-            const average = count > 0 ? total / count : 0
-            const uniqueUsers = new Set(state.salesData.map(item => item.category)).size
+        metrics(): MetricCard[] {
+            const totalSales = this.salesData.reduce((sum, sale) => sum + sale.amount, 0)
+            const avgSale = totalSales / (this.salesData.length || 1)
 
             return [
                 {
-                    title: 'Общий доход',
-                    value: total,
+                    title: 'Общие продажи',
+                    value: totalSales,
+                    icon: '💰',
                     change: 12.5,
-                    changeType: 'increase',
-                    icon: '💰'
-                },
-                {
-                    title: 'Заказы',
-                    value: count,
-                    change: 8.2,
-                    changeType: 'increase',
-                    icon: '📦'
+                    changeType: 'increase'
                 },
                 {
                     title: 'Средний чек',
-                    value: Math.round(average),
-                    change: -2.1,
-                    changeType: 'decrease',
-                    icon: '💳'
+                    value: Math.round(avgSale),
+                    icon: '📊',
+                    change: 8.3,
+                    changeType: 'increase'
                 },
                 {
-                    title: 'Категории',
-                    value: uniqueUsers,
-                    change: 5.7,
-                    changeType: 'increase',
-                    icon: '🏷️'
+                    title: 'Транзакций',
+                    value: this.salesData.length,
+                    icon: '🛒',
+                    change: 15.2,
+                    changeType: 'increase'
+                },
+                {
+                    title: 'Клиентов',
+                    value: Math.round(this.salesData.length * 0.7),
+                    icon: '👥',
+                    change: -2.4,
+                    changeType: 'decrease'
                 }
             ]
         },
 
-        // Данные для графика
-        chartData: (state) => {
-            const categories = ['Электроника', 'Одежда', 'Книги']
-            const dates = [...new Set(state.salesData.map(item => item.date))].sort()
+        chartData(): ChartData {
+            // Группируем по датам
+            const dailyTotals: Record<string, number> = {}
 
-            const datasets = categories.map((category, index) => {
-                const colors = [
-                    { bg: 'rgba(99, 102, 241, 0.1)', border: 'rgb(99, 102, 241)' },
-                    { bg: 'rgba(139, 92, 246, 0.1)', border: 'rgb(139, 92, 246)' },
-                    { bg: 'rgba(16, 185, 129, 0.1)', border: 'rgb(16, 185, 129)' }
-                ]
-
-                const data = dates.map(date => {
-                    return state.salesData
-                        .filter(item => item.date === date && item.category === category)
-                        .reduce((sum, item) => sum + item.amount, 0)
+            this.salesData.forEach(sale => {
+                const date = new Date(sale.date).toLocaleDateString('ru-RU', {
+                    month: 'short',
+                    day: 'numeric'
                 })
-
-                return {
-                    label: category,
-                    data,
-                    backgroundColor: colors[index].bg,
-                    borderColor: colors[index].border,
-                    tension: 0.4
-                }
+                dailyTotals[date] = (dailyTotals[date] || 0) + sale.amount
             })
 
             return {
-                labels: dates.map(date => {
-                    const d = new Date(date)
-                    return d.toLocaleDateString('ru-RU', { month: 'short', day: 'numeric' })
-                }),
-                datasets
+                labels: Object.keys(dailyTotals),
+                datasets: [{
+                    label: 'Продажи (₸)',
+                    data: Object.values(dailyTotals),
+                    borderColor: 'rgb(99, 102, 241)',
+                    backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                    tension: 0.4
+                }]
             }
         }
     },
 
     actions: {
-        async fetchSalesData(period: string = 'week') {
+        async fetchSalesData(period: string = 'month') {
             this.isLoading = true
             this.error = null
 
             try {
-                const { data } = await $fetch('/api/sales', {
-                    query: { period }
-                })
+                // Симуляция API запроса
+                await new Promise(resolve => setTimeout(resolve, 1000))
+
+                // Генерируем тестовые данные
+                const categories = ['Электроника', 'Одежда', 'Продукты', 'Спорт', 'Книги']
+                const data: SaleData[] = []
+
+                const daysCount = period === 'today' ? 1 : period === 'week' ? 7 : 30
+
+                for (let i = 0; i < daysCount * 5; i++) {
+                    const date = new Date()
+                    date.setDate(date.getDate() - Math.floor(i / 5))
+
+                    data.push({
+                        date: date.toISOString(),
+                        amount: Math.floor(Math.random() * 50000) + 10000,
+                        category: categories[Math.floor(Math.random() * categories.length)]
+                    })
+                }
 
                 this.salesData = data
-                this.selectedPeriod = this.getPeriodConfig(period)
-            } catch (error) {
-                this.error = 'Ошибка загрузки данных'
-                console.error('Error fetching sales data:', error)
+                this.selectedPeriod = {
+                    value: period,
+                    label: period === 'today' ? 'Сегодня' : period === 'week' ? 'Неделя' : 'Месяц'
+                }
+
+            } catch (err) {
+                this.error = 'Ошибка при загрузке данных'
+                console.error(err)
             } finally {
                 this.isLoading = false
             }
-        },
-
-        getPeriodConfig(period: string): FilterPeriod {
-            const periods = {
-                today: {
-                    label: 'Сегодня',
-                    value: 'today',
-                    startDate: '2024-06-07',
-                    endDate: '2024-06-07'
-                },
-                week: {
-                    label: 'Неделя',
-                    value: 'week',
-                    startDate: '2024-06-01',
-                    endDate: '2024-06-07'
-                },
-                month: {
-                    label: 'Месяц',
-                    value: 'month',
-                    startDate: '2024-06-01',
-                    endDate: '2024-06-30'
-                }
-            }
-
-            return periods[period as keyof typeof periods] || periods.week
         }
     }
 })
