@@ -7,14 +7,23 @@ export default defineNuxtConfig({
         '@nuxtjs/tailwindcss'
     ],
     css: ['~/assets/css/main.css'],
+    
+    // GitHub Pages конфигурация
+    app: {
+        baseURL: '/Project-tz/',
+        buildAssetsDir: '/_nuxt/'
+    },
+    
+    // Статическая генерация для GitHub Pages
+    nitro: {
+        prerender: {
+            routes: ['/']
+        }
+    },
+    
     runtimeConfig: {
         public: {
             apiBase: '/api'
-        }
-    },
-    nitro: {
-        experimental: {
-            wasm: true
         }
     }
 })
